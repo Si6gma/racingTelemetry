@@ -1,292 +1,265 @@
-//packages
-//import Chart from 'chart.js'
+const parametersContainer = document.getElementById("parameters");
+const chartCanvas = document.getElementById("simpleChart");
+const displaySelect = document.getElementById("DisplayOptions");
 
+let displayMode = displaySelect.value;
+let csvData = {};
+let timeData = [];
+let yParameters = {};
+let selectedDataList = [];
+let selectedParameterNames = [];
+let myChart = null;
 
-
-//Global constants
-const parameters = document.querySelector("#parameters");
-const simpleChart = document.querySelector("#simpleChart");
-const display = document.querySelector('#DisplayOptions');
-var displaymode = display.value;
-var csvAsJson = {};
-var t = {};
-var yParameters = {}
-var datalist = [];
-var parameterlist = [];
-let myChart;
-
-display.addEventListener("change", async function(event) {
-    displaymode = display.value;
-    displaygraph(t['time [s]'], datalist, parameterlist);
-})
-
-
-
-//Eventlistener upload csv
-document.getElementById("csvFile").addEventListener("change", async function(event) {
-    const file = event.target.files[0];
-    csvAsJson = await readCsv(file);
-    await getTime(csvAsJson);   
-    displayParameters(yParameters);
-    
+// Update display mode when the select element changes
+displaySelect.addEventListener("change", () => {
+  displayMode = displaySelect.value;
+  if (timeData.length && selectedDataList.length) {
+    renderChart(timeData, selectedDataList, selectedParameterNames);
+  }
 });
 
-
-
-
-  
-
-
-//Read csv
-async function readCsv(file)   {
-    return new Promise((resolve, reject) => {
-        if (!file) return;
-        
-        const reader = new FileReader();
-        const Json = {}
-        reader.onload = async function(e) {
-            const text = e.target.result;
-            const lines = text.split("\n").map(line => line.trim()).filter(line => line); // Remove empty lines
-            if (lines.length < 2) return; // Ensure we have at least a header + one row
-
-            const headers = lines[0].split("\t").map(header => header.trim());
-            
-
-            // Initialize keys with empty arrays
-            headers.forEach(header => {
-                Json[header] = [];
-            });
-
-            // Process each row
-            for (let i = 1; i < lines.length; i++) {
-                const values = lines[i].split("\t").map(value => value.trim());
-                
-                // Add each value to its corresponding key
-                headers.forEach((header, index) => {
-                    Json[header].push(Math.round(parseFloat(values[index])*100)/100); 
-                });
-            }
-            resolve(Json)
-        };
-        reader.onerror = (error) => reject(error);
-        reader.readAsText(file);
-    });
-}
-
-//seperatate t from y parameters
-async function getTime(csvAsJson)   {
-    t = {'time [s]': []};
-    t['time [s]'].push(csvAsJson['Log Timestamp [498]'][0]);
-    for (let i = 1; i < csvAsJson['Log Timestamp [498]'].length; i++)  {
-        new_t = Math.round((t['time [s]'][i-1] + csvAsJson['Log Timestamp [498]'][i]/1000)*100)/100;
-        t['time [s]'].push(new_t);
-    } 
-    yParameters = {...csvAsJson};
-    delete yParameters['Log Timestamp [498]'];
-}
-
-//display csv parameters
-function displayParameters(yParameters) {
-    //delete all old parameters
-    const oldParameters = document.querySelectorAll(".parameter");
-    oldParameters.forEach((oldParamter) => {
-        oldParamter.remove();
-    });
-    if (JSON.stringify(yParameters) === '{}') {console.log('DisplayParamters returned'); return;} // check if jsonobject is empty. 
-
-    for (const key in yParameters) {
-        //for each key(parameter in the json object create a div with parameter class)
-        const new_parameter = document.createElement("div");
-        new_parameter.classList.add('parameter');
-
-
-        //for each div with parameter class create a parameter label with the key as text and parameter_value as class. 
-        const new_parameter_value = document.createElement("p");
-        new_parameter_value.textContent = key;
-        new_parameter_value.classList.add('parameter_value');
-        new_parameter.appendChild(new_parameter_value);
-
-        //for each div with parameter class add a checkbox with class parameter_checkbox.
-        const new_parameter_checkbox = document.createElement("input");
-        new_parameter_checkbox.setAttribute("type", "checkbox");
-        new_parameter_checkbox.setAttribute("value", key);
-        new_parameter_checkbox.setAttribute("name", "y-variable");
-        new_parameter_checkbox.classList.add('parameter_check');
-        new_parameter.appendChild(new_parameter_checkbox);
-        parameters.appendChild(new_parameter);
+// CSV file upload event listener
+document.getElementById("csvFile").addEventListener("change", async (event) => {
+  const file = event.target.files[0];
+  if (file) {
+    try {
+      csvData = await readCsv(file);
+      processTimeData(csvData);
+      displayParameters({ ...csvData });
+    } catch (error) {
+      console.error("Error reading CSV:", error);
     }
-    parameterCheck = document.querySelectorAll(".parameter_check");
-    //Eventlister for buttons
-    parameterCheck.forEach((parameterSelected) => {
-        parameterSelected.addEventListener("change", async function(event) {
-            datalist = [];
-            parameterlist = [];
-            parameterCheck.forEach((checkbox) => {
-            
-                if (checkbox.checked)  {
-                    datalist.push(yParameters[checkbox.getAttribute("value")]);
-                    parameterlist.push(checkbox.getAttribute("value"));
-                 
-                }
+  }
+});
 
-            })
-            displaygraph(t['time [s]'], datalist, parameterlist);
-        })
-    })
+// Read CSV file (assuming tab-delimited)
+async function readCsv(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target.result;
+      const lines = text.split("\n").map((line) => line.trim()).filter(Boolean);
+      if (lines.length < 2) {
+        return reject(new Error("CSV must contain a header and at least one row."));
+      }
+
+      const headers = lines[0].split("\t").map((header) => header.trim());
+      const data = {};
+      headers.forEach((header) => (data[header] = []));
+
+      for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split("\t").map((value) => value.trim());
+        headers.forEach((header, index) => {
+          const num = parseFloat(values[index]);
+          data[header].push(isNaN(num) ? values[index] : Math.round(num * 100) / 100);
+        });
+      }
+      resolve(data);
+    };
+    reader.onerror = (error) => reject(error);
+    reader.readAsText(file);
+  });
 }
 
-function displaygraph(tValues, yValues, parameter) {
-    let dsets = [];
-    let ylimits = {}
-     if (myChart) {
-         myChart.destroy();
-         myChart = null; // Clear reference
-     }
-     let multiplescales = {
-         'x': {
-             title: {
-                 display: true,
-                 text: 'Time (s)'
-             }
-         }
-     }
- 
- 
-     for (i=0; i < yValues.length; i++) {
-         dsets[i] = {
-             label: parameter[i],
-             data: yValues[i],
-             borderWidth: 2,
-             fill: false,
-             yAxisID: `y${i}`
-         };
-        console.log(displaymode);
-        switch(displaymode)    {
-            case "Fully stacked":
-                console.log('Fully stacked activated')
-                multiplescales[`y${i}`] = 
-                    {
-                        
-                        title: {
-                            display: true,
-                            text: parameter[i]    
-                        },
-                        
-                        type: 'linear',
-                        offset: true,
-                        position: 'left',
+// Process time data (assumes time is in the column "Log Timestamp [498]")
+function processTimeData(data) {
+  if (!data["Log Timestamp [498]"] || !data["Log Timestamp [498]"].length) return;
+  timeData = [];
+  timeData.push(data["Log Timestamp [498]"][0]);
+  for (let i = 1; i < data["Log Timestamp [498]"].length; i++) {
+    const newTime = Math.round((timeData[i - 1] + data["Log Timestamp [498]"][i] / 1000) * 100) / 100;
+    timeData.push(newTime);
+  }
+  yParameters = { ...data };
+  delete yParameters["Log Timestamp [498]"];
+}
 
-                        
-                        stack: 'demo',
-                        //min: Math.min(...yValues[i]) - (Math.max(...yValues[i]) - Math.min(...yValues[i]))*0.1,
-                        //max: Math.max(...yValues[i]) + (Math.max(...yValues[i]) - Math.min(...yValues[i]))*0.1           
-                    }
-                    ylimits[`y${i}`] = {
-                        min: Math.min(...yValues[i]) - (Math.max(...yValues[i]) - Math.min(...yValues[i]))*0.1,
-                        max: Math.max(...yValues[i]) + (Math.max(...yValues[i]) + Math.min(...yValues[i]))*0.1  
-                    }
-                    break;
-            case "Semi stacked":
-                console.log('Semi stacked activated')
-                multiplescales[`y${i}`] = 
-                    {
-                        display: false,
-                        title: {
-                            display: true,
-                            text: parameter[i]    
-                        },
-                        
-                        type: 'linear',
-                        offset: true,
-                        position: 'left',
+// Dynamically create parameter checkboxes
+function displayParameters(params) {
+  parametersContainer.innerHTML = ""; // Clear existing parameters
 
-                        
-                        //stack: FALSE,
-                        min: Math.min(...yValues[i]) - i*(Math.max(...yValues[i]) - Math.min(...yValues[i])),
-                        max: Math.max(...yValues[i]) + (yValues.length -1 -i)*(Math.max(...yValues[i]) - Math.min(...yValues[i]))            
-                        
-                    }
-                    ylimits[`y${i}`] = {
-                        min: Math.min(...yValues[i]) - i*(Math.max(...yValues[i]) - Math.min(...yValues[i])),  
-                        max: Math.max(...yValues[i]) + (yValues.length -1 -i)*(Math.max(...yValues[i]) - Math.min(...yValues[i]))
-                    }
-                    break;
-            case "not stacked": 
-            console.log('not stacked activated')
-                multiplescales[`y${i}`] = 
-                    {
-                        display: false,
-                        title: {
-                            display: true,
-                            text: parameter[i]    
-                        },
-                        
-                        type: 'linear',
-                        offset: true,
-                        position: 'left',
+  if (Object.keys(params).length === 0) return;
 
-                    
-                        //stack: FALSE,
-                        min: Math.min(...yValues[i]) - (Math.max(...yValues[i]) - Math.min(...yValues[i]))*0.1,
-                        max: Math.max(...yValues[i]) + (Math.max(...yValues[i]) - Math.min(...yValues[i]))*0.1            
-                    }
-                    ylimits[`y${i}`] = {
-                        min: Math.min(...yValues[i]) - (Math.max(...yValues[i]) - Math.min(...yValues[i]))*0.1,
-                        max: Math.max(...yValues[i]) + (Math.max(...yValues[i]) - Math.min(...yValues[i]))*0.1 
-                }
+  for (const key in params) {
+    const paramDiv = document.createElement("div");
+    paramDiv.className = "parameter";
+
+    const label = document.createElement("label");
+    label.textContent = key;
+    label.className = "parameter-label";
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.value = key;
+    checkbox.name = "y-variable";
+    checkbox.className = "parameter-checkbox";
+
+    // Update chart when a checkbox is toggled
+    checkbox.addEventListener("change", () => {
+      selectedDataList = [];
+      selectedParameterNames = [];
+      document.querySelectorAll(".parameter-checkbox").forEach((box) => {
+        if (box.checked) {
+          selectedDataList.push(yParameters[box.value]);
+          selectedParameterNames.push(box.value);
         }
+      });
+      if (timeData.length && selectedDataList.length) {
+        renderChart(timeData, selectedDataList, selectedParameterNames);
+      }
+    });
 
+    paramDiv.appendChild(label);
+    paramDiv.appendChild(checkbox);
+    parametersContainer.appendChild(paramDiv);
+  }
+}
 
+// Render the chart using Chart.js
+function renderChart(tValues, yValues, parameterNames) {
+  const datasets = [];
+  const yAxisLimits = {};
+  const yAxes = {
+    x: {
+      title: {
+        display: true,
+        text: "Time (s)"
+      }
+    }
+  };
 
+  // Destroy existing chart if needed
+  if (myChart) {
+    myChart.destroy();
+    myChart = null;
+  }
 
-         
-     }
-     console.log(multiplescales)
-     myChart = new Chart(simpleChart, {
-         type: 'line',
-         data: {
-             labels: tValues,
-             datasets: dsets,
-             
-         },
-         options: {
-             responsive: true,
-             animation: false,
-             
-             scales : multiplescales,
-             
-             plugins: {
-                
-                 zoom: {
-                     limits: ylimits,
-                     pan: {
-                         enabled: true,
-                         onPanStart({chart, point}) {
-                             const area = chart.chartArea;
-                             const w10 = area.width * 0.1;
-                             const h10 = area.height * 0.1;
-                             if (point.x < area.left + w10 || point.x > area.right - w10
-                               || point.y < area.top + h10 || point.y > area.bottom - h10) {
-                               return false; // abort
-                             }
-                         },
-                         mode: 'xy', // Enable panning on the x-axis
-                         threshold: 100, // Minimum distance to start panning (useful for touch devices)
-                         speed: 0.3, // Adjust pan speed (lower = slower)
-                     },
-                     zoom: {
-                         wheel: {
-                             enabled: true,
-                             speed: 0.1
-                         },
-                         pinch: {
-                             enabled: true, // Enable pinch zooming on touch devices
-                             speed: 0.2
-                         },
-                         mode: 'xy', // Zoom in/out on the x-axis                        
-                     }
-                 }
-             }       
-         },        
-     });
- }
+  yValues.forEach((dataArray, i) => {
+    datasets.push({
+      label: parameterNames[i],
+      data: dataArray,
+      borderWidth: 2,
+      fill: false,
+      yAxisID: `y${i}`,
+      pointRadius: 0,       // Hide points by default
+      pointHoverRadius: 0   // Hide hover points by default
+    });
+
+    // Configure the y-axis based on the selected display mode
+    switch (displayMode) {
+      case "Fully stacked":
+        yAxes[`y${i}`] = {
+          title: { display: true, text: parameterNames[i] },
+          type: "linear",
+          offset: true,
+          position: "left",
+          stack: "demo"
+        };
+        yAxisLimits[`y${i}`] = {
+          min: Math.min(...dataArray) - (Math.max(...dataArray) - Math.min(...dataArray)) * 0.1,
+          max: Math.max(...dataArray) + (Math.max(...dataArray) - Math.min(...dataArray)) * 0.1
+        };
+        break;
+      case "Semi stacked":
+        yAxes[`y${i}`] = {
+          display: false,
+          title: { display: true, text: parameterNames[i] },
+          type: "linear",
+          offset: true,
+          position: "left",
+          min: Math.min(...dataArray) - i * (Math.max(...dataArray) - Math.min(...dataArray)),
+          max: Math.max(...dataArray) + (yValues.length - 1 - i) * (Math.max(...dataArray) - Math.min(...dataArray))
+        };
+        yAxisLimits[`y${i}`] = {
+          min: Math.min(...dataArray) - i * (Math.max(...dataArray) - Math.min(...dataArray)),
+          max: Math.max(...dataArray) + (yValues.length - 1 - i) * (Math.max(...dataArray) - Math.min(...dataArray))
+        };
+        break;
+      case "not stacked":
+      default:
+        yAxes[`y${i}`] = {
+          display: false,
+          title: { display: true, text: parameterNames[i] },
+          type: "linear",
+          offset: true,
+          position: "left",
+          min: Math.min(...dataArray) - (Math.max(...dataArray) - Math.min(...dataArray)) * 0.1,
+          max: Math.max(...dataArray) + (Math.max(...dataArray) - Math.min(...dataArray)) * 0.1
+        };
+        yAxisLimits[`y${i}`] = {
+          min: Math.min(...dataArray) - (Math.max(...dataArray) - Math.min(...dataArray)) * 0.1,
+          max: Math.max(...dataArray) + (Math.max(...dataArray) - Math.min(...dataArray)) * 0.1
+        };
+        break;
+    }
+  });
+
+  myChart = new Chart(chartCanvas, {
+    type: "line",
+    data: {
+      labels: tValues,
+      datasets: datasets
+    },
+    options: {
+      responsive: true,
+      animation: false,
+      scales: yAxes,
+      plugins: {
+        zoom: {
+          limits: yAxisLimits,
+          pan: {
+            enabled: true,
+            onPanStart({ chart, point }) {
+              const area = chart.chartArea;
+              const marginX = area.width * 0.1;
+              const marginY = area.height * 0.1;
+              if (
+                point.x < area.left + marginX ||
+                point.x > area.right - marginX ||
+                point.y < area.top + marginY ||
+                point.y > area.bottom - marginY
+              ) {
+                return false;
+              }
+            },
+            mode: "xy",
+            threshold: 100,
+            speed: 0.3
+          },
+          zoom: {
+            wheel: { enabled: true, speed: 0.1 },
+            pinch: { enabled: true, speed: 0.2 },
+            mode: "xy"
+          }
+        }
+      }
+    }
+  });
+}
+
+// Toggle point markers on mouse events
+function togglePointMarkers(radius) {
+  if (myChart) {
+    myChart.data.datasets.forEach((dataset) => {
+      dataset.pointRadius = radius;
+      dataset.pointHoverRadius = radius;
+    });
+    myChart.update();
+  }
+}
+
+chartCanvas.addEventListener("mousedown", (e) => {
+  if (e.button === 0) {
+    togglePointMarkers(3); // Show markers when left mouse is pressed
+  }
+});
+
+chartCanvas.addEventListener("mouseup", (e) => {
+  if (e.button === 0) {
+    togglePointMarkers(0); // Hide markers on release
+  }
+});
+
+chartCanvas.addEventListener("mouseleave", () => {
+  togglePointMarkers(0);
+});
