@@ -1,0 +1,65 @@
+* {
+    margin: 0;
+    padding: 0;
+  }
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: hsl(0,0%, 95%);
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: left;
+}
+
+header {
+    align-self: center;
+}
+main {
+    display: flex;
+    flex-direction: row;
+    justify-content: left;
+    flex-wrap: nowrap;
+}
+
+#leftbox {
+    display: flex;
+    flex-direction: column;
+    align-items: left;
+}
+#rightbox {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0;
+    padding: 20;
+}
+#choosecsv {
+    margin: 0;
+    padding: 20;
+}
+
+#chooseYvariable {
+    margin: 0;
+    padding: 20;
+}
+
+.parameter{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin: 0;
+    padding: 0;
+}
+.parameter_value {
+    color: black;
+    font-size: 1em;
+    font-weight: 300;
+    margin: 0;
+    padding: 0;
+}
+
+.parameter_check{
+    margin: 0;
+    padding: 0;
+}
