@@ -1,56 +1,78 @@
-* {
-    margin: 0;
+html, body {
+    height: 100%;
+    margin: 0; /* Removes default browser margin */
     padding: 0;
-  }
+}
 
 body {
-    font-family: Arial, Helvetica, sans-serif;
-    background-color: hsl(0,0%, 95%);
-    margin: 0;
+    /* background-color: rgb(201, 210, 210); */
+    min-height: 100vh; /* Ensures body fills the viewport */
     display: flex;
-    flex-direction: column;
-    align-items: left;
+    flex-direction: column; /* Stacks elements vertically */
 }
 
 header {
+    margin: 0px;
+    background-color: white;
     align-self: center;
+    /* border: 1px solid black; */
 }
+
 main {
+    background-color: white;
+    /* border: 1px solid black; */
+    margin-top: 10px;
     display: flex;
     flex-direction: row;
-    justify-content: left;
+    justify-content: space-around;
     flex-wrap: nowrap;
+    flex-grow: 1; /* Takes up remaining space */
 }
+
+/* footer {
+    margin-top: 10px;
+    background-color: white;
+    border: 1px solid black;
+    padding: 10px;
+} */
 
 #leftbox {
+    margin: 10px;
+    background-color: rgb(225, 225, 225);
+    border: 3px solid rgb(180, 180, 180);
+    border-radius: 10px;
     display: flex;
     flex-direction: column;
-    align-items: left;
 }
+
 #rightbox {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin: 0;
-    padding: 20;
+    margin: 10px;
+    background-color: rgb(225, 225, 225);
+    border: 3px solid rgb(180, 180, 180);
+    border-radius: 10px;
+    flex-grow: 1; /* Allows it to fill space properly */
 }
+
 #choosecsv {
-    margin: 0;
-    padding: 20;
+    padding: 20px 10px;
 }
 
-#chooseYvariable {
-    margin: 0;
-    padding: 20;
+#display_options {
+    padding: 0px 10px;
 }
 
-.parameter{
+#parameters {
+    margin: 20px 10px;
+}
+
+.parameter {
+    margin: 0px;
+    padding: 0px;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-    margin: 0;
-    padding: 0;
 }
+
 .parameter_value {
     color: black;
     font-size: 1em;
@@ -63,3 +85,10 @@ main {
     margin: 0;
     padding: 0;
 }
+
+#timeGraph{
+    /* background-color: aquamarine; */
+    width: 99%;
+    height: 99%;
+}
+

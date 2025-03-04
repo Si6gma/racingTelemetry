@@ -6,11 +6,19 @@
 //Global constants
 const parameters = document.querySelector("#parameters");
 const simpleChart = document.querySelector("#simpleChart");
-var parameterCheck = document.querySelectorAll(".parameter_check");
+const display = document.querySelector('#DisplayOptions');
+var displaymode = display.value;
 var csvAsJson = {};
 var t = {};
-var yParameters = {};
+var yParameters = {}
+var datalist = [];
+var parameterlist = [];
 let myChart;
+
+display.addEventListener("change", async function(event) {
+    displaymode = display.value;
+    displaygraph(t['time [s]'], datalist, parameterlist);
+})
 
 
 
@@ -100,7 +108,7 @@ function displayParameters(yParameters) {
 
         //for each div with parameter class add a checkbox with class parameter_checkbox.
         const new_parameter_checkbox = document.createElement("input");
-        new_parameter_checkbox.setAttribute("type", "radio");
+        new_parameter_checkbox.setAttribute("type", "checkbox");
         new_parameter_checkbox.setAttribute("value", key);
         new_parameter_checkbox.setAttribute("name", "y-variable");
         new_parameter_checkbox.classList.add('parameter_check');
@@ -110,83 +118,175 @@ function displayParameters(yParameters) {
     parameterCheck = document.querySelectorAll(".parameter_check");
     //Eventlister for buttons
     parameterCheck.forEach((parameterSelected) => {
-    parameterSelected.addEventListener("change", async function(event) {
-        
-        //console.log(event.target.value);
-        displaygraph(t['time [s]'], yParameters[event.target.value], event.target.value);
+        parameterSelected.addEventListener("change", async function(event) {
+            datalist = [];
+            parameterlist = [];
+            parameterCheck.forEach((checkbox) => {
+            
+                if (checkbox.checked)  {
+                    datalist.push(yParameters[checkbox.getAttribute("value")]);
+                    parameterlist.push(checkbox.getAttribute("value"));
+                 
+                }
+
+            })
+            displaygraph(t['time [s]'], datalist, parameterlist);
+        })
     })
-})
 }
 
 function displaygraph(tValues, yValues, parameter) {
-   
-    if (myChart) {
-        myChart.destroy();
-        myChart = null; // Clear reference
-    }
-
-    myChart = new Chart(simpleChart, {
-        type: 'line',
-        data: {
-            labels: tValues,
-            datasets: [{
-                label: parameter,
-                data: yValues,
-                borderColor: 'blue',
-                borderWidth: 2,
-                fill: false
-            }]
-        },
-        options: {
-            //responsive: true,
-            animation: false,
-            /*
-            interaction: {
-                mode: 'nearest',
-                axis: 'x',
-                intersect: false
-            },
-            */
-            scales: {
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Time (s)'
-                    }
-                },
-                y: {
-                    title: {
-                        display: true,
-                        text: parameter
-                    }
-                }
-            },
-            plugins: {
-                /*
-                decimation: {
-                    enabled: true,
-                    algorithm: 'lttb', // 'lttb' (Largest Triangle Three Buckets) is great for line charts
-                    samples: 100 // Reduces dataset to 100 points when zoomed in
-                },
-                */
-                zoom: {
-                    pan: {
-                        enabled: true,
-                        mode: 'xy' // Enable panning on the x-axis
-                    },
-                    zoom: {
-                        wheel: {
-                            enabled: true,
-                            speed: 0.4
+    let dsets = [];
+    let ylimits = {}
+     if (myChart) {
+         myChart.destroy();
+         myChart = null; // Clear reference
+     }
+     let multiplescales = {
+         'x': {
+             title: {
+                 display: true,
+                 text: 'Time (s)'
+             }
+         }
+     }
+ 
+ 
+     for (i=0; i < yValues.length; i++) {
+         dsets[i] = {
+             label: parameter[i],
+             data: yValues[i],
+             borderWidth: 2,
+             fill: false,
+             yAxisID: `y${i}`
+         };
+        console.log(displaymode);
+        switch(displaymode)    {
+            case "Fully stacked":
+                console.log('Fully stacked activated')
+                multiplescales[`y${i}`] = 
+                    {
+                        
+                        title: {
+                            display: true,
+                            text: parameter[i]    
                         },
-                        pinch: {
-                            enabled: true // Enable pinch zooming on touch devices
-                        },
-                        mode: 'xy', // Zoom in/out on the x-axis                        
-                    }
-                }
-            }       
-        },        
-    });
-}
+                        
+                        type: 'linear',
+                        offset: true,
+                        position: 'left',
 
+                        
+                        stack: 'demo',
+                        //min: Math.min(...yValues[i]) - (Math.max(...yValues[i]) - Math.min(...yValues[i]))*0.1,
+                        //max: Math.max(...yValues[i]) + (Math.max(...yValues[i]) - Math.min(...yValues[i]))*0.1           
+                    }
+                    ylimits[`y${i}`] = {
+                        min: Math.min(...yValues[i]) - (Math.max(...yValues[i]) - Math.min(...yValues[i]))*0.1,
+                        max: Math.max(...yValues[i]) + (Math.max(...yValues[i]) + Math.min(...yValues[i]))*0.1  
+                    }
+                    break;
+            case "Semi stacked":
+                console.log('Semi stacked activated')
+                multiplescales[`y${i}`] = 
+                    {
+                        display: false,
+                        title: {
+                            display: true,
+                            text: parameter[i]    
+                        },
+                        
+                        type: 'linear',
+                        offset: true,
+                        position: 'left',
+
+                        
+                        //stack: FALSE,
+                        min: Math.min(...yValues[i]) - i*(Math.max(...yValues[i]) - Math.min(...yValues[i])),
+                        max: Math.max(...yValues[i]) + (yValues.length -1 -i)*(Math.max(...yValues[i]) - Math.min(...yValues[i]))            
+                        
+                    }
+                    ylimits[`y${i}`] = {
+                        min: Math.min(...yValues[i]) - i*(Math.max(...yValues[i]) - Math.min(...yValues[i])),  
+                        max: Math.max(...yValues[i]) + (yValues.length -1 -i)*(Math.max(...yValues[i]) - Math.min(...yValues[i]))
+                    }
+                    break;
+            case "not stacked": 
+            console.log('not stacked activated')
+                multiplescales[`y${i}`] = 
+                    {
+                        display: false,
+                        title: {
+                            display: true,
+                            text: parameter[i]    
+                        },
+                        
+                        type: 'linear',
+                        offset: true,
+                        position: 'left',
+
+                    
+                        //stack: FALSE,
+                        min: Math.min(...yValues[i]) - (Math.max(...yValues[i]) - Math.min(...yValues[i]))*0.1,
+                        max: Math.max(...yValues[i]) + (Math.max(...yValues[i]) - Math.min(...yValues[i]))*0.1            
+                    }
+                    ylimits[`y${i}`] = {
+                        min: Math.min(...yValues[i]) - (Math.max(...yValues[i]) - Math.min(...yValues[i]))*0.1,
+                        max: Math.max(...yValues[i]) + (Math.max(...yValues[i]) - Math.min(...yValues[i]))*0.1 
+                }
+        }
+
+
+
+
+         
+     }
+     console.log(multiplescales)
+     myChart = new Chart(simpleChart, {
+         type: 'line',
+         data: {
+             labels: tValues,
+             datasets: dsets,
+             
+         },
+         options: {
+             responsive: true,
+             animation: false,
+             
+             scales : multiplescales,
+             
+             plugins: {
+                
+                 zoom: {
+                     limits: ylimits,
+                     pan: {
+                         enabled: true,
+                         onPanStart({chart, point}) {
+                             const area = chart.chartArea;
+                             const w10 = area.width * 0.1;
+                             const h10 = area.height * 0.1;
+                             if (point.x < area.left + w10 || point.x > area.right - w10
+                               || point.y < area.top + h10 || point.y > area.bottom - h10) {
+                               return false; // abort
+                             }
+                         },
+                         mode: 'xy', // Enable panning on the x-axis
+                         threshold: 100, // Minimum distance to start panning (useful for touch devices)
+                         speed: 0.3, // Adjust pan speed (lower = slower)
+                     },
+                     zoom: {
+                         wheel: {
+                             enabled: true,
+                             speed: 0.1
+                         },
+                         pinch: {
+                             enabled: true, // Enable pinch zooming on touch devices
+                             speed: 0.2
+                         },
+                         mode: 'xy', // Zoom in/out on the x-axis                        
+                     }
+                 }
+             }       
+         },        
+     });
+ }

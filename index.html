@@ -19,12 +19,21 @@
             <div id = "choosecsv">
                 <input type="file" id="csvFile" accept=".csv">
             </div>
+            <div id = "display_options">
+              <label for="displayoptions">display options:</label>
+
+              <select name="displayoptions" id="DisplayOptions">
+                <option value="not stacked">not stacked</option>
+                <option value="Semi stacked">Semi stacked</option>
+                <option value="Fully stacked">Fully stacked</option>
+              </select> 
+            </div>
             <div id = "parameters">
             </div>
         </div>
         <div id = "rightbox">
             <div id = "timeGraph">
-              <canvas id="simpleChart" aria-label="Hello ARIA World" role="img" width="1200" height="800"></canvas>
+              <canvas id="simpleChart" aria-label="Hello ARIA World" role="img"></canvas>
             </div>
         </div>
     </main>
