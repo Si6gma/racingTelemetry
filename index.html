@@ -1,49 +1,55 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>HartUI</title>
-    <link rel="stylesheet" href="styles.css" />
-    <link rel="icon" href="Images/favicon.ico" type="image/x-icon" />
+   
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>HARTUI</title>
+    <link rel="stylesheet" href="./styles.css">
+    <link rel="icon" href="./Images/favicon.ico" type="image/x-icon">
   </head>
   <body>
-    <header>
-      <h1>Welcome to HartUI</h1>
+    <Header>
+        
+        <h1>Welcome to HartUI</h1>
     </header>
     <main>
-      <aside id="leftbox">
-        <section id="choosecsv">
-          <input type="file" id="csvFile" accept=".csv" />
-        </section>
-        <section id="display_options">
-          <label for="DisplayOptions">Display Options:</label>
-          <select id="DisplayOptions">
-            <option value="not stacked">Not Stacked</option>
-            <option value="Semi stacked">Semi Stacked</option>
-            <option value="Fully stacked">Fully Stacked</option>
-          </select>
-        </section>
-        <section id="parameters"></section>
-      </aside>
-      <section id="rightbox">
-        <div id="timeGraph">
-          <canvas
-            id="simpleChart"
-            aria-label="Chart of data"
-            role="img"
-          ></canvas>
+        <div id = "leftbox">
+            <div id = "choosecsv">
+                <input type="file" id="csvFile" accept=".csv">
+            </div>
+            <div id = "display_options">
+              <label for="displayoptions">display options:</label>
+
+              <select name="displayoptions" id="DisplayOptions">
+                <option value="not stacked">not stacked</option>
+                <option value="semi stacked">semi stacked</option>
+                <option value="fully stacked">fully stacked</option>
+              </select> 
+              <span id = lightdarkemoji> </span>
+            </div>
+            <div id = "parameters">
+              
+            </div>
+            <div id = "createParameterButtonBox">
+
+            </div>
         </div>
-      </section>
+        <div id = "rightbox">
+            <div id = "timeGraph">
+              <canvas id="simpleChart" aria-label="Hello ARIA World" role="img"></canvas>
+            </div>
+        </div>
     </main>
     <footer>
-      <p>&copy; 2025 HartUI</p>
     </footer>
-    <!-- External libraries -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.js"></script> 
     <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
-    <script src="main.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/12.4.0/math.min.js"></script>
+    <script src="main.js"></script>
+    
   </body>
 </html>
