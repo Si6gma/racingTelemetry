@@ -33,7 +33,6 @@
               
             </div>
             <div id = "createParameterButtonBox">
-
             </div>
         </div>
         <div id = "rightbox">
@@ -41,6 +40,33 @@
               <canvas id="simpleChart" aria-label="Hello ARIA World" role="img"></canvas>
             </div>
         </div>
+        <div id = 'calcModal' class = 'modal'>
+          <div id = 'calcUI' class = 'modal-content'>
+            <div id = 'calcUItopBox'>
+              <label for="newParameterName"> Name new variable: </label>
+              <input type="text" id="newParameterName">  
+            </div>
+            <div id = 'calcUImiddleBox'>
+              <div id = 'calcUIleftBox'>
+                
+              </div>
+              <div id = calcUIrightBox>
+                <button class = 'mathOperator'> + </button>
+                <button class = 'mathOperator'> - </button>
+                <button class = 'mathOperator'> * </button>
+                <button class = 'mathOperator'> / </button>
+                <button class = 'mathOperator'> sqrt( </button>
+                <button class = 'mathOperator'> ^ </button>
+                <button class = 'mathOperator'> ( </button>
+                <button class = 'mathOperator'> ) </button>
+              </div>
+            </div>
+            <div id = 'calcUIbottomBox'>
+              <input type="text" id= "newParameterEquation">  
+              <button id= "submitNewParameter" > Add parameter </button>  
+            </div>
+          </div>
+      </div>
     </main>
     <footer>
     </footer>
@@ -49,6 +75,7 @@
     <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/12.4.0/math.min.js"></script>
+    <script src="settings.js"></script>
     <script src="main.js"></script>
     
   </body>
